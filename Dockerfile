@@ -1,8 +1,8 @@
-# Copyright 2017 The Perkeep Authors.
+# Copyright 2019 lukesolo.
 
 FROM openjdk:8-jdk
 
-MAINTAINER Perkeep Authors <perkeep@googlegroups.com>
+MAINTAINER lukesolo <suddenmadness@yandex.ru>
 
 CMD ["./gradlew"]
 
@@ -34,9 +34,7 @@ RUN curl -O https://dl.google.com/android/repository/sdk-tools-linux-3859397.zip
 RUN echo '444e22ce8ca0f67353bda4b85175ed3731cae3ffa695ca18119cbacef1c1bea0  sdk-tools-linux-3859397.zip' | sha256sum -c
 RUN unzip sdk-tools-linux-3859397.zip
 RUN echo y | $ANDROID_HOME/tools/bin/sdkmanager --update
-#RUN echo y | $ANDROID_HOME/tools/bin/sdkmanager 'platforms;android-22'
 RUN echo y | $ANDROID_HOME/tools/bin/sdkmanager 'platforms;android-23'
-#RUN echo y | $ANDROID_HOME/tools/bin/sdkmanager 'build-tools;22.0.1'
 RUN echo y | $ANDROID_HOME/tools/bin/sdkmanager 'build-tools;23.0.3'
 RUN echo y | $ANDROID_HOME/tools/bin/sdkmanager 'extras;android;m2repository'
 RUN echo y | $ANDROID_HOME/tools/bin/sdkmanager 'ndk-bundle'
@@ -59,19 +57,21 @@ RUN mkdir $GOPHER/bin \
 
 # Get Go stable release
 WORKDIR $GOPHER
-RUN curl -O https://storage.googleapis.com/golang/go1.11.1.linux-amd64.tar.gz
-RUN echo '2871270d8ff0c8c69f161aaae42f9f28739855ff5c5204752a8d92a1c9f63993  go1.11.1.linux-amd64.tar.gz' | sha256sum -c
-RUN tar -xzf go1.11.1.linux-amd64.tar.gz
+RUN curl -O https://dl.google.com/go/go1.13.3.linux-amd64.tar.gz
+RUN echo '0804bf02020dceaa8a7d7275ee79f7a142f1996bfd0c39216ccb405f93f994c0  go1.13.3.linux-amd64.tar.gz' | sha256sum -c
+RUN tar -xvf go1.13.3.linux-amd64.tar.gz
+RUN rm go1.13.3.linux-amd64.tar.gz
 ENV GOPATH $GOPHER
 ENV GOROOT $GOPHER/go
 ENV PATH $PATH:$GOROOT/bin:$GOPHER/bin
 
+# Get go tools
+RUN go get -u golang.org/x/tools/go/packages
+
 # Get gomobile
 RUN go get -u golang.org/x/mobile/cmd/gomobile
 WORKDIR $GOPATH/src/golang.org/x/mobile/cmd/gomobile
-RUN git reset --hard 92f3b9caf7ba8f4f9c10074225afcba0cba47a62
 RUN go install
 
 # init gomobile
-RUN gomobile init -ndk $ANDROID_HOME/ndk-bundle
-
+RUN gomobile init
